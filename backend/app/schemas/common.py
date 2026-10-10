@@ -31,6 +31,7 @@ class MessageOut(BaseModel):
 class DevMessageOut(BaseModel):
     message: str
     dev_code: str | None = None
+    telegram_link: str | None = None
 
 
 class DetailOut(BaseModel):

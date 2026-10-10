@@ -72,7 +72,9 @@ export function Register() {
         ...(isDriver && telegram.trim() ? { telegram_id: telegram.trim() } : {}),
       })
       setDevHint(response.dev_code ?? null)
-      navigate('/auth/verify', { state: { phone: response.phone || apiPhone } })
+      navigate('/auth/verify', {
+        state: { phone: response.phone || apiPhone, telegramLink: response.telegram_link },
+      })
     } catch (caught) {
       setError(getErrorMessage(caught, t))
     } finally {

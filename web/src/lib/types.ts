@@ -61,6 +61,7 @@ export interface RegisterResponse {
   phone: string
   message: string
   dev_code?: string
+  telegram_link?: string
 }
 
 export interface MessageResponse {
@@ -68,6 +69,7 @@ export interface MessageResponse {
   detail?: string
   dev_code?: string
   dev_token?: string
+  telegram_link?: string
 }
 
 export interface RouteOut {

@@ -52,6 +52,7 @@ const en: DeepPartial<UzDict> = {
     vehicleCategory: 'Vehicle category',
     verifyTitle: 'Enter the code',
     resend: 'Resend code',
+    telegramGetCode: 'Get code in Telegram',
     forgotTitle: 'Reset password',
     resetTitle: 'New password',
     passwordMismatch: 'Passwords do not match',

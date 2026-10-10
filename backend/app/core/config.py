@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
+    telegram_bot_username: str = "bekatuzz_bot"
 
     simulate_vehicles: bool = True
 
@@ -33,6 +34,10 @@ class Settings(BaseSettings):
     @property
     def telegram_enabled(self) -> bool:
         return bool(self.telegram_bot_token)
+
+    def telegram_link(self, phone: str) -> str:
+        payload = phone.replace("+", "").strip()
+        return f"https://t.me/{self.telegram_bot_username}?start={payload}"
 
 
 @lru_cache

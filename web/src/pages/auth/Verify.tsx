@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/Button'
 import { OtpInput } from '../../components/OtpInput'
-import { ArrowLeftIcon, SendIcon } from '../../components/icons'
+import { ArrowLeftIcon, SendIcon, TelegramIcon } from '../../components/icons'
 import { api } from '../../lib/api'
 import { getErrorMessage } from '../../lib/errors'
 import { formatDuration, getDevHint, setDevHint } from '../../lib/utils'
@@ -16,7 +16,7 @@ export function Verify() {
   const location = useLocation()
   const verify = useAuthStore((state) => state.verify)
 
-  const state = location.state as { phone?: string } | null
+  const state = location.state as { phone?: string; telegramLink?: string } | null
   const phone = state?.phone ?? ''
 
   const [code, setCode] = useState('')
@@ -25,6 +25,7 @@ export function Verify() {
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
   const [devCode, setDevCodeState] = useState<string | null>(getDevHint())
+  const [telegramLink, setTelegramLink] = useState<string | null>(state?.telegramLink ?? null)
   const submitting = useRef(false)
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export function Verify() {
     setError('')
     try {
       const response = await api.post<MessageResponse>('/auth/resend-code', { phone })
+      if (response.telegram_link) setTelegramLink(response.telegram_link)
       if (response.dev_code) {
         setDevCodeState(response.dev_code)
         setDevHint(response.dev_code)
@@ -70,6 +72,10 @@ export function Verify() {
     } finally {
       setResending(false)
     }
+  }
+
+  const openTelegram = () => {
+    if (telegramLink) window.open(telegramLink, '_blank', 'noopener')
   }
 
   return (
@@ -85,6 +91,17 @@ export function Verify() {
 
       <h1 className="text-2xl font-bold text-text">{t('auth.verifyTitle')}</h1>
       <p className="mt-2 text-sm text-muted">{t('auth.verifyText', { phone })}</p>
+
+      {telegramLink ? (
+        <button
+          type="button"
+          onClick={openTelegram}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-btn bg-[#229ED9] px-4 py-3 text-sm font-semibold text-white"
+        >
+          <TelegramIcon size={20} />
+          {t('auth.telegramGetCode')}
+        </button>
+      ) : null}
 
       {devCode ? (
         <div className="mt-5 rounded-btn border border-warning/40 bg-warning/10 px-3.5 py-2.5 text-sm text-warning">

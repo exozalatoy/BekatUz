@@ -97,6 +97,7 @@ const uz = {
     passwordMismatch: 'Parollar mos kelmadi',
     verifyTitle: 'Kodni kiriting',
     verifyText: '{{phone}} raqamiga 6 xonali kod yuborildi',
+    telegramGetCode: 'Telegramda kod olish',
     resend: 'Kodni qayta yuborish',
     resendIn: 'Qayta yuborish {{time}}',
     devCode: 'Development kod: {{code}}',

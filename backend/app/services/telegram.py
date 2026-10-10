@@ -76,10 +76,8 @@ def send_code(db, phone: str, telegram_id: str | None = None) -> str | None:
             return None
         except Exception:
             logger.exception("Failed to send Telegram code to %s", target)
-            logger.info("Telegram verification code for %s: %s", phone, code)
-            return None
     logger.info("Telegram verification code for %s: %s", phone, code)
-    return None
+    return code if settings.env == "dev" else None
 
 
 def send_text(text: str, telegram_id: str | None = None) -> bool:

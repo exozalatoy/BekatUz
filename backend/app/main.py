@@ -23,6 +23,7 @@ from app.core.database import get_db
 from app.core.errors import register_exception_handlers
 from app.core.redis import redis_client
 from app.services.simulator import start_simulator, stop_simulator
+from app.services.telegram_bot import start_bot, stop_bot
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bekatuz")
@@ -38,7 +39,12 @@ async def lifespan(app: FastAPI):
         logger.info("Running without Redis (in-memory fallback)")
     if settings.simulate_vehicles:
         start_simulator()
+    try:
+        start_bot()
+    except Exception:
+        logger.exception("Failed to start Telegram bot")
     yield
+    await stop_bot()
     await stop_simulator()
 
 

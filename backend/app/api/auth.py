@@ -101,6 +101,7 @@ def register(
         phone=user.phone,
         message="Tasdiqlash kodi yuborildi",
         dev_code=dev_code,
+        telegram_link=settings.telegram_link(user.phone),
     )
 
 
@@ -146,7 +147,11 @@ def resend_code(
     if user.is_verified:
         raise DomainError("User already verified", 400)
     dev_code = send_code(db, user.phone, user.telegram_id)
-    return DevMessageOut(message="Tasdiqlash kodi qayta yuborildi", dev_code=dev_code)
+    return DevMessageOut(
+        message="Tasdiqlash kodi qayta yuborildi",
+        dev_code=dev_code,
+        telegram_link=settings.telegram_link(user.phone),
+    )
 
 
 @router.post("/auth/login", response_model=LoginOut)
