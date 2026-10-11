@@ -319,6 +319,19 @@ class Notification(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
+class PushSubscription(Base):
+    __tablename__ = "push_subscriptions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    endpoint: Mapped[str] = mapped_column(Text, unique=True)
+    p256dh: Mapped[str] = mapped_column(String(255))
+    auth: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
 class TelegramCode(Base):
     __tablename__ = "telegram_codes"
 
@@ -359,6 +372,7 @@ __all__ = [
     "Subscription",
     "Payment",
     "Notification",
+    "PushSubscription",
     "TelegramCode",
     "RefreshToken",
 ]

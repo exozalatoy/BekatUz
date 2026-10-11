@@ -202,3 +202,11 @@ export const MenuIcon = (p: IconProps) => (
     <path d="M4 7h16M4 12h16M4 17h16" />
   </Icon>
 )
+
+export const CreditCardIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <path d="M3 10h18" />
+    <path d="M7 15h4" />
+  </Icon>
+)

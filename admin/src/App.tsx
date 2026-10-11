@@ -14,6 +14,7 @@ import { DashboardPage } from './pages/Dashboard'
 import { DriversPage } from './pages/Drivers'
 import { LoginPage } from './pages/Login'
 import { NewsPage } from './pages/News'
+import { PaymentsPage } from './pages/Payments'
 import { PremiumPage } from './pages/Premium'
 import { ReviewsPage } from './pages/Reviews'
 import { SettingsPage } from './pages/Settings'
@@ -62,6 +63,7 @@ const router = createBrowserRouter([
           { path: '/app/vehicles', element: <VehiclesPage /> },
           { path: '/app/news', element: <NewsPage /> },
           { path: '/app/reviews', element: <ReviewsPage /> },
+          { path: '/app/payments', element: <PaymentsPage /> },
           { path: '/app/premium', element: <PremiumPage /> },
           { path: '/app/settings', element: <SettingsPage /> },
         ],

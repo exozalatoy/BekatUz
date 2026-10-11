@@ -1,6 +1,19 @@
+import { api } from './api'
+
 export type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const raw = window.atob(base64)
+  const output = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i += 1) {
+    output[i] = raw.charCodeAt(i)
+  }
+  return output
 }
 
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null
@@ -118,6 +131,37 @@ export function registerServiceWorker(
       )
     })
     .catch(() => void 0)
+}
+
+export async function enableWebPush(): Promise<boolean> {
+  if (!notificationSupported()) return false
+  const granted = await requestNotificationPermission()
+  if (!granted) return false
+  try {
+    const keyResponse = await api.get<{ public_key: string; enabled: boolean }>('/push/public-key')
+    if (!keyResponse.enabled || !keyResponse.public_key) return true
+    const registration = await navigator.serviceWorker.ready
+    let subscription = await registration.pushManager.getSubscription()
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(keyResponse.public_key) as BufferSource,
+      })
+    }
+    const json = subscription.toJSON() as {
+      endpoint?: string
+      keys?: { p256dh?: string; auth?: string }
+    }
+    if (json.endpoint && json.keys?.p256dh && json.keys?.auth) {
+      await api.post('/push/subscribe', {
+        endpoint: json.endpoint,
+        keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
+      })
+    }
+    return true
+  } catch {
+    return true
+  }
 }
 
 export function applyUpdate(registration: ServiceWorkerRegistration): void {

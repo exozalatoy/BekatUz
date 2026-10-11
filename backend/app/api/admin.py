@@ -47,6 +47,7 @@ from app.schemas.review import ReviewOut, ReviewStatusIn, review_out
 from app.schemas.transport import RouteOut, VehicleOut, route_out, vehicle_out
 from app.schemas.user import UserOut, user_out
 from app.services.payments import activate_subscription
+from app.services.push import notify_user
 
 router = APIRouter(tags=["admin"])
 
@@ -632,6 +633,13 @@ def admin_approve_payment(
         db.commit()
         activate_subscription(db, payer, payment)
         db.refresh(payment)
+        notify_user(
+            db,
+            payer,
+            "Premium faollashtirildi",
+            "To'lovingiz tasdiqlandi. Premium imkoniyatlar faol!",
+            "/app/premium",
+        )
     plan = db.get(PremiumPlan, payment.plan_id) if payment.plan_id else None
     return admin_payment_out(payment, payer, plan)
 
@@ -651,5 +659,13 @@ def admin_reject_payment(
     payment.status = "rejected"
     payment.receipt_data = None
     db.commit()
+    if payer is not None:
+        notify_user(
+            db,
+            payer,
+            "To'lov rad etildi",
+            "To'lovingiz tasdiqlanmadi. Iltimos, chekni qayta yuboring.",
+            "/app/premium",
+        )
     plan = db.get(PremiumPlan, payment.plan_id) if payment.plan_id else None
     return admin_payment_out(payment, payer, plan)

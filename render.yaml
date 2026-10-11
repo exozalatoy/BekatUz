@@ -53,6 +53,13 @@ services:
         sync: false
       - key: TELEGRAM_BOT_USERNAME
         value: bekatuzz_bot
+      # Web Push (VAPID). Brauzer bildirishnomalari (saytdan chiqqanda ham) uchun.
+      - key: VAPID_PUBLIC_KEY
+        value: "BPjfmt79nm218N0H4Q_lMnVRimqMnkCPicsvJNBPM1jSRTvmZVEl58Jkq5pgBuYJKmBNRxrHCZR2R-wLQndkbX8"
+      - key: VAPID_PRIVATE_KEY
+        value: "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgqHUI0J_q7myEzGoT94p5RHLbSheHZA4CITXV4AOIt-mhRANCAAT435re_Z5ttfDdB-EP5TJ1UYpqjJ5Aj4nLLyTQTzNY0kU75mVRJefCZKuaYAbmCSpgTUcaxwmUdkfsC0J3ZG1_"
+      - key: VAPID_SUBJECT
+        value: mailto:admin@bekatuz.uz
 
   - type: web
     name: bekat-uz-web

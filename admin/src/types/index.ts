@@ -148,6 +148,23 @@ export interface PlanOut {
   is_first_month_free: boolean
 }
 
+export type PaymentStatus = 'pending' | 'review' | 'paid' | 'rejected'
+
+export interface PaymentOut {
+  id: number
+  user_id: number
+  user_name: string | null
+  user_phone: string | null
+  plan_name: string | null
+  provider: string
+  status: PaymentStatus
+  amount: number
+  currency: string
+  receipt_data: string | null
+  created_at: string
+  paid_at: string | null
+}
+
 export interface ChartPoint {
   date: string
   users: number

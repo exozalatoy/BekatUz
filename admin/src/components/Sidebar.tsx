@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/auth'
 import {
   BusIcon,
   CloseIcon,
+  CreditCardIcon,
   CrownIcon,
   DriverIcon,
   HomeIcon,
@@ -33,6 +34,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { to: '/app/vehicles', label: t('nav.vehicles'), icon: BusIcon, end: false },
     { to: '/app/news', label: t('nav.news'), icon: NewsIcon, end: false },
     { to: '/app/reviews', label: t('nav.reviews'), icon: StarIcon, end: false },
+    { to: '/app/payments', label: t('nav.payments'), icon: CreditCardIcon, end: false },
     { to: '/app/premium', label: t('nav.premium'), icon: CrownIcon, end: false },
     { to: '/app/settings', label: t('nav.settings'), icon: SettingsIcon, end: false },
   ]

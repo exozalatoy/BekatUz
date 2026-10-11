@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     payment_card_number: str = "5614 6818 8670 3564"
     payment_card_holder: str = ""
 
+    # Web Push (VAPID). Bo'sh bo'lsa brauzer push o'chirilgan hisoblanadi.
+    vapid_public_key: str = ""
+    vapid_private_key: str = ""
+    vapid_subject: str = "mailto:admin@bekatuz.uz"
+
     simulate_vehicles: bool = True
 
     @field_validator("database_url")
@@ -47,6 +52,10 @@ class Settings(BaseSettings):
     @property
     def telegram_enabled(self) -> bool:
         return bool(self.telegram_bot_token)
+
+    @property
+    def web_push_enabled(self) -> bool:
+        return bool(self.vapid_public_key and self.vapid_private_key)
 
     def telegram_link(self, phone: str) -> str:
         payload = phone.replace("+", "").strip()

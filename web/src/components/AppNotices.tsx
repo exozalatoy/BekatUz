@@ -6,13 +6,13 @@ import { useToast } from './toast-context'
 import { api } from '../lib/api'
 import {
   applyUpdate,
+  enableWebPush,
   isIos,
   isStandalone,
   notificationPermission,
   notificationSupported,
   onInstallAvailable,
   registerServiceWorker,
-  requestNotificationPermission,
   showSystemNotification,
   type BeforeInstallPromptEvent,
 } from '../lib/pwa'
@@ -147,8 +147,15 @@ export function AppNotices() {
     setShowInstall(false)
   }, [promptEvent])
 
+  useEffect(() => {
+    if (!accessToken) return
+    if (notificationSupported() && Notification.permission === 'granted') {
+      void enableWebPush()
+    }
+  }, [accessToken])
+
   const handleEnableNotifications = useCallback(async () => {
-    const granted = await requestNotificationPermission()
+    const granted = await enableWebPush()
     setPermission(notificationSupported() ? Notification.permission : 'unsupported')
     if (granted) {
       toast.show(t('pwa.notifOn'), 'success')

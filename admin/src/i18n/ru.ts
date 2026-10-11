@@ -39,6 +39,7 @@ const ru = {
     vehicles: 'Транспорт',
     news: 'Новости',
     reviews: 'Рейтинги',
+    payments: 'Платежи',
     premium: 'Премиум',
     settings: 'Настройки',
     logout: 'Выйти',

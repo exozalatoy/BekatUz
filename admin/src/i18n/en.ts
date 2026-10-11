@@ -39,6 +39,7 @@ const en = {
     vehicles: 'Vehicles',
     news: 'News',
     reviews: 'Reviews',
+    payments: 'Payments',
     premium: 'Premium',
     settings: 'Settings',
     logout: 'Logout',

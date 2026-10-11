@@ -51,42 +51,59 @@ def _run_async(coro):
     return result.get("value")
 
 
-async def _send_telegram_message(text: str) -> None:
+def is_chat_id(value: str | None) -> bool:
+    """Telegram chat_id raqamli bo'ladi (masalan -1001234567890 yoki 123456789).
+
+    '@username' ko'rinishidagi qiymatga bot xabar yubora olmaydi, chunki foydalanuvchi
+    botga oldin yozmagan bo'lsa username orqali chat_id aniqlanmaydi.
+    """
+    if not value:
+        return False
+    return value.lstrip("-").isdigit()
+
+
+async def _send_telegram_message(text: str, chat_id: str | int) -> None:
     from aiogram import Bot
 
     bot = Bot(token=settings.telegram_bot_token)
     try:
-        target = settings.telegram_chat_id
-        if target:
-            await bot.send_message(target, text)
+        await bot.send_message(chat_id, text)
     finally:
         await bot.session.close()
 
 
 def send_code(db, phone: str, telegram_id: str | None = None) -> str | None:
+    """Har bir raqam uchun alohida kod yaratadi va faqat o'sha raqamga
+    bog'langan Telegram chatga yuboradi."""
     code = generate_code()
     store_code(db, phone, code)
-    if settings.telegram_enabled:
-        target = settings.telegram_chat_id or telegram_id
-        if target:
-            try:
-                _run_async(_send_telegram_message(f"Bekat Uz tasdiqlash kodi: {code}"))
-                return None
-            except Exception:
-                logger.exception("Failed to send Telegram code to %s", target)
+    if settings.telegram_enabled and is_chat_id(telegram_id):
+        try:
+            _run_async(
+                _send_telegram_message(
+                    f"Bekat Uz tasdiqlash kodi: {code}\n\nKod 5 daqiqa amal qiladi.",
+                    telegram_id,  # type: ignore[arg-type]
+                )
+            )
+            return None
+        except Exception:
+            logger.exception("Failed to send Telegram code to %s", telegram_id)
     # Kod faqat Telegram bot orqali yetkaziladi. Demo kod faqat lokal dev da chiqadi.
     if settings.env == "dev":
         logger.info("Telegram verification code for %s: %s", phone, code)
         return code
-    logger.info("Verification code generated for %s (delivered via Telegram bot)", phone)
+    logger.info(
+        "Verification code generated for %s (deliver via Telegram bot deep link)", phone
+    )
     return None
 
 
 def send_text(text: str, telegram_id: str | None = None) -> bool:
-    if not settings.telegram_enabled:
+    if not settings.telegram_enabled or not is_chat_id(telegram_id):
         return False
-    target = settings.telegram_chat_id or telegram_id
-    if not target:
+    try:
+        _run_async(_send_telegram_message(text, telegram_id))  # type: ignore[arg-type]
+        return True
+    except Exception:
+        logger.exception("Failed to send Telegram message to %s", telegram_id)
         return False
-    _run_async(_send_telegram_message(text))
-    return True

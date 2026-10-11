@@ -12,6 +12,7 @@ from app.api import (
     news,
     notifications,
     premium,
+    push,
     reviews,
     routes,
     users,
@@ -75,6 +76,7 @@ def create_app() -> FastAPI:
         reviews,
         premium,
         notifications,
+        push,
         driver,
         admin,
     ):

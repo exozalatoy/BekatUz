@@ -19,7 +19,7 @@ import {
 } from '../../components/icons'
 import { api } from '../../lib/api'
 import { getErrorMessage } from '../../lib/errors'
-import { notificationPermission, requestNotificationPermission } from '../../lib/pwa'
+import { enableWebPush, notificationPermission } from '../../lib/pwa'
 import { changeLanguage } from '../../i18n'
 import { cn } from '../../lib/utils'
 import { useAppStore } from '../../store/app'
@@ -113,7 +113,7 @@ export function Settings() {
   const handleNotifications = async (value: boolean) => {
     setNotifications(value)
     if (value) {
-      const granted = await requestNotificationPermission()
+      const granted = await enableWebPush()
       if (granted) {
         toast.show(t('pwa.notifOn'), 'success')
       } else {
