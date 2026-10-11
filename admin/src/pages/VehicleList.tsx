@@ -131,6 +131,8 @@ export function VehicleList() {
     setEditing(null)
     setForm(emptyForm)
     setModalOpen(true)
+    void routesQuery.refetch()
+    void driversQuery.refetch()
   }
 
   const openEdit = (vehicle: VehicleOut) => {
@@ -147,6 +149,8 @@ export function VehicleList() {
       seats_free: String(vehicle.seats_free ?? ''),
     })
     setModalOpen(true)
+    void routesQuery.refetch()
+    void driversQuery.refetch()
   }
 
   const closeModal = () => {

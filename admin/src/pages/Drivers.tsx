@@ -100,6 +100,7 @@ export function DriversPage() {
       apiPatch<AdminDriver>(`/admin/drivers/${payload.id}`, payload.body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-drivers'] })
+      void queryClient.invalidateQueries({ queryKey: ['drivers-options'] })
       toast.success(t('toast.updated'))
     },
     onError: (err) => toast.error(errorMessage(err)),
@@ -117,6 +118,7 @@ export function DriversPage() {
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-drivers'] })
+      void queryClient.invalidateQueries({ queryKey: ['drivers-options'] })
       toast.success(t('toast.created'))
       setModalOpen(false)
       setForm(emptyForm)
