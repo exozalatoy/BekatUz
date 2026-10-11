@@ -5,7 +5,7 @@ import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
 import { PasswordInput } from '../../components/PasswordInput'
 import { ArrowLeftIcon, PhoneIcon } from '../../components/icons'
-import { cn, formatPhone, isPhoneComplete, passwordStrength, setDevHint, toApiPhone } from '../../lib/utils'
+import { cn, formatPhone, isPhoneComplete, passwordStrength, toApiPhone } from '../../lib/utils'
 import { getErrorMessage } from '../../lib/errors'
 import { VEHICLE_CATEGORIES } from '../../lib/types'
 import { useAuthStore } from '../../store/auth'
@@ -71,7 +71,6 @@ export function Register() {
         ...(isDriver ? { vehicle_category: category } : {}),
         ...(isDriver && telegram.trim() ? { telegram_id: telegram.trim() } : {}),
       })
-      setDevHint(response.dev_code ?? null)
       navigate('/auth/verify', {
         state: { phone: response.phone || apiPhone, telegramLink: response.telegram_link },
       })

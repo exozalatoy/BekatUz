@@ -298,6 +298,7 @@ class Payment(Base):
     amount: Mapped[float] = mapped_column(Float, default=0.0)
     currency: Mapped[str] = mapped_column(String(10), default="USD")
     pay_url: Mapped[str] = mapped_column(String(255), default="")
+    receipt_data: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 

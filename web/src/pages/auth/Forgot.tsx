@@ -6,7 +6,6 @@ import { Input } from '../../components/Input'
 import { ArrowLeftIcon } from '../../components/icons'
 import { api } from '../../lib/api'
 import { getErrorMessage } from '../../lib/errors'
-import { setDevHint } from '../../lib/utils'
 import type { MessageResponse } from '../../lib/types'
 
 export function Forgot() {
@@ -28,7 +27,6 @@ export function Forgot() {
       const response = await api.post<MessageResponse>('/auth/forgot-password', {
         identifier: identifier.trim(),
       })
-      setDevHint(response.dev_token ?? null)
       navigate('/auth/reset', { state: { token: response.dev_token ?? '' } })
     } catch (caught) {
       setError(getErrorMessage(caught, t))

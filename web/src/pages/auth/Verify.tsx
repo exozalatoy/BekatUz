@@ -6,7 +6,7 @@ import { OtpInput } from '../../components/OtpInput'
 import { ArrowLeftIcon, SendIcon, TelegramIcon } from '../../components/icons'
 import { api } from '../../lib/api'
 import { getErrorMessage } from '../../lib/errors'
-import { formatDuration, getDevHint, setDevHint } from '../../lib/utils'
+import { formatDuration } from '../../lib/utils'
 import { useAuthStore } from '../../store/auth'
 import type { MessageResponse } from '../../lib/types'
 
@@ -24,7 +24,6 @@ export function Verify() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
-  const [devCode, setDevCodeState] = useState<string | null>(getDevHint())
   const [telegramLink, setTelegramLink] = useState<string | null>(state?.telegramLink ?? null)
   const submitting = useRef(false)
 
@@ -46,7 +45,6 @@ export function Verify() {
     setError('')
     try {
       await verify(phone, value)
-      setDevHint(null)
     } catch (caught) {
       setError(getErrorMessage(caught, t))
       setCode('')
@@ -62,10 +60,6 @@ export function Verify() {
     try {
       const response = await api.post<MessageResponse>('/auth/resend-code', { phone })
       if (response.telegram_link) setTelegramLink(response.telegram_link)
-      if (response.dev_code) {
-        setDevCodeState(response.dev_code)
-        setDevHint(response.dev_code)
-      }
       setSeconds(120)
     } catch (caught) {
       setError(getErrorMessage(caught, t))
@@ -101,12 +95,6 @@ export function Verify() {
           <TelegramIcon size={20} />
           {t('auth.telegramGetCode')}
         </button>
-      ) : null}
-
-      {devCode ? (
-        <div className="mt-5 rounded-btn border border-warning/40 bg-warning/10 px-3.5 py-2.5 text-sm text-warning">
-          {t('auth.devCode', { code: devCode })}
-        </div>
       ) : null}
 
       <div className="mt-6">

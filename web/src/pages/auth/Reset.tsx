@@ -8,7 +8,6 @@ import { useToast } from '../../components/toast-context'
 import { ArrowLeftIcon } from '../../components/icons'
 import { api } from '../../lib/api'
 import { getErrorMessage } from '../../lib/errors'
-import { getDevHint, setDevHint } from '../../lib/utils'
 import type { MessageResponse } from '../../lib/types'
 
 export function Reset() {
@@ -18,13 +17,11 @@ export function Reset() {
   const toast = useToast()
 
   const state = location.state as { token?: string } | null
-  const [token, setToken] = useState(state?.token ?? getDevHint() ?? '')
+  const [token, setToken] = useState(state?.token ?? '')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
-  const devToken = getDevHint()
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -47,7 +44,6 @@ export function Reset() {
         token: token.trim(),
         new_password: password,
       })
-      setDevHint(null)
       toast.show(t('auth.resetDone'), 'success')
       navigate('/auth/login', { replace: true })
     } catch (caught) {
@@ -70,12 +66,6 @@ export function Reset() {
 
       <h1 className="text-2xl font-bold text-text">{t('auth.resetTitle')}</h1>
       <p className="mt-2 text-sm text-muted">{t('auth.resetText')}</p>
-
-      {devToken ? (
-        <div className="mt-5 rounded-btn border border-warning/40 bg-warning/10 px-3.5 py-2.5 text-sm text-warning">
-          {t('auth.devToken', { token: devToken })}
-        </div>
-      ) : null}
 
       <div className="mt-6 flex flex-col gap-4">
         <Input

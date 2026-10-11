@@ -35,10 +35,18 @@ from app.schemas.admin import (
 )
 from app.schemas.common import build_page
 from app.schemas.news import NewsCreateIn, NewsOut, NewsUpdateIn, news_out
-from app.schemas.premium import PlanCreateIn, PlanOut, PlanUpdateIn, plan_out
+from app.schemas.premium import (
+    AdminPaymentOut,
+    PlanCreateIn,
+    PlanOut,
+    PlanUpdateIn,
+    admin_payment_out,
+    plan_out,
+)
 from app.schemas.review import ReviewOut, ReviewStatusIn, review_out
 from app.schemas.transport import RouteOut, VehicleOut, route_out, vehicle_out
 from app.schemas.user import UserOut, user_out
+from app.services.payments import activate_subscription
 
 router = APIRouter(tags=["admin"])
 
@@ -579,3 +587,69 @@ def admin_delete_plan(
     db.delete(plan)
     db.commit()
     return {"detail": "Plan deleted"}
+
+
+@router.get("/admin/payments")
+def admin_list_payments(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    status: str | None = Query(None),
+    user: User = Depends(_admin),
+    db=Depends(get_db),
+):
+    stmt = select(Payment)
+    if status:
+        stmt = stmt.where(Payment.status == status)
+    total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+    rows = db.scalars(
+        stmt.order_by(Payment.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    ).all()
+    items = []
+    for payment in rows:
+        payer = db.get(User, payment.user_id)
+        plan = db.get(PremiumPlan, payment.plan_id) if payment.plan_id else None
+        items.append(admin_payment_out(payment, payer, plan))
+    return build_page(items, total, page, page_size)
+
+
+@router.post("/admin/payments/{payment_id}/approve", response_model=AdminPaymentOut)
+def admin_approve_payment(
+    payment_id: int,
+    user: User = Depends(_admin),
+    db=Depends(get_db),
+):
+    payment = db.get(Payment, payment_id)
+    if payment is None:
+        raise DomainError("Payment not found", 404)
+    payer = db.get(User, payment.user_id)
+    if payer is None:
+        raise DomainError("Payer not found", 404)
+    if payment.status != "paid":
+        payment.status = "paid"
+        payment.paid_at = utcnow()
+        db.commit()
+        activate_subscription(db, payer, payment)
+        db.refresh(payment)
+    plan = db.get(PremiumPlan, payment.plan_id) if payment.plan_id else None
+    return admin_payment_out(payment, payer, plan)
+
+
+@router.post("/admin/payments/{payment_id}/reject", response_model=AdminPaymentOut)
+def admin_reject_payment(
+    payment_id: int,
+    user: User = Depends(_admin),
+    db=Depends(get_db),
+):
+    payment = db.get(Payment, payment_id)
+    if payment is None:
+        raise DomainError("Payment not found", 404)
+    if payment.status == "paid":
+        raise DomainError("Payment already approved", 400)
+    payer = db.get(User, payment.user_id)
+    payment.status = "rejected"
+    payment.receipt_data = None
+    db.commit()
+    plan = db.get(PremiumPlan, payment.plan_id) if payment.plan_id else None
+    return admin_payment_out(payment, payer, plan)

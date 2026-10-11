@@ -19,6 +19,7 @@ import {
 } from '../../components/icons'
 import { api } from '../../lib/api'
 import { getErrorMessage } from '../../lib/errors'
+import { notificationPermission, requestNotificationPermission } from '../../lib/pwa'
 import { changeLanguage } from '../../i18n'
 import { cn } from '../../lib/utils'
 import { useAppStore } from '../../store/app'
@@ -62,7 +63,9 @@ export function Settings() {
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
 
-  const [notifications, setNotifications] = useState(true)
+  const [notifications, setNotifications] = useState(
+    notificationPermission() === 'granted' || notificationPermission() === 'unsupported',
+  )
   const [biometrics, setBiometrics] = useState(false)
   const [pwOpen, setPwOpen] = useState(false)
   const [oldPassword, setOldPassword] = useState('')
@@ -107,8 +110,16 @@ export function Settings() {
     }
   }
 
-  const handleNotifications = (value: boolean) => {
+  const handleNotifications = async (value: boolean) => {
     setNotifications(value)
+    if (value) {
+      const granted = await requestNotificationPermission()
+      if (granted) {
+        toast.show(t('pwa.notifOn'), 'success')
+      } else {
+        toast.show(t('pwa.notifBlocked'), 'error')
+      }
+    }
     api.patch('/users/me', { notifications_enabled: value }).catch(() => void 0)
   }
 

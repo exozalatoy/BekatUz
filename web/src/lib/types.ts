@@ -188,14 +188,34 @@ export interface PremiumPlan {
 
 export interface PremiumSubscribeResponse {
   payment_id: string
-  provider: 'payme' | 'click'
-  pay_url: string
+  status: string
+  amount: number
+  currency: string
+  card_number: string
+  card_holder: string
+}
+
+export interface PremiumReceiptResponse {
+  payment_id: string
   status: string
 }
 
-export interface PremiumConfirmResponse {
+export interface PremiumPaymentOut {
+  id: string
+  provider: string
+  status: string
+  amount: number
+  currency: string
+  pay_url: string
+  created_at: string
+  paid_at: string | null
+}
+
+export interface PremiumMe {
   is_premium: boolean
-  expires_at: string
+  plan: PremiumPlan | null
+  expires_at: string | null
+  payments: PremiumPaymentOut[]
 }
 
 export interface NotificationOut {

@@ -1,9 +1,8 @@
 from datetime import datetime
-from typing import Literal
 
 from pydantic import BaseModel
 
-from app.models import Payment, PremiumPlan, Subscription
+from app.models import Payment, PremiumPlan, Subscription, User
 
 
 class PlanOut(BaseModel):
@@ -54,30 +53,47 @@ class PremiumMeOut(BaseModel):
     payments: list[PaymentOut] = []
 
 
+class PaymentInfoOut(BaseModel):
+    card_number: str
+    card_holder: str
+
+
 class SubscribeIn(BaseModel):
     plan_id: int
-    provider: Literal["payme", "click"] = "payme"
 
 
 class SubscribeOut(BaseModel):
     payment_id: int
-    provider: str
-    pay_url: str
+    status: str
+    amount: float
+    currency: str
+    card_number: str
+    card_holder: str
+
+
+class ReceiptIn(BaseModel):
+    payment_id: int
+    receipt_data: str
+
+
+class ReceiptOut(BaseModel):
+    payment_id: int
     status: str
 
 
-class ConfirmIn(BaseModel):
-    payment_id: int
-
-
-class ConfirmOut(BaseModel):
-    is_premium: bool
-    expires_at: datetime | None = None
-
-
-class WebhookIn(BaseModel):
-    payment_id: int | None = None
-    status: str | None = None
+class AdminPaymentOut(BaseModel):
+    id: int
+    user_id: int
+    user_name: str | None = None
+    user_phone: str | None = None
+    plan_name: str | None = None
+    provider: str
+    status: str
+    amount: float
+    currency: str
+    receipt_data: str | None = None
+    created_at: datetime
+    paid_at: datetime | None = None
 
 
 def plan_out(plan: PremiumPlan) -> PlanOut:
@@ -100,6 +116,23 @@ def payment_out(payment: Payment) -> PaymentOut:
         amount=payment.amount,
         currency=payment.currency,
         pay_url=payment.pay_url,
+        created_at=payment.created_at,
+        paid_at=payment.paid_at,
+    )
+
+
+def admin_payment_out(payment: Payment, user: User, plan: PremiumPlan | None = None) -> AdminPaymentOut:
+    return AdminPaymentOut(
+        id=payment.id,
+        user_id=payment.user_id,
+        user_name=user.full_name if user else None,
+        user_phone=user.phone if user else None,
+        plan_name=plan.name if plan else None,
+        provider=payment.provider,
+        status=payment.status,
+        amount=payment.amount,
+        currency=payment.currency,
+        receipt_data=payment.receipt_data,
         created_at=payment.created_at,
         paid_at=payment.paid_at,
     )

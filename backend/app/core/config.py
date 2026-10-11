@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     telegram_chat_id: str = ""
     telegram_bot_username: str = "bekatuzz_bot"
 
+    payment_card_number: str = "5614 6818 8670 3564"
+    payment_card_holder: str = ""
+
     simulate_vehicles: bool = True
 
     @field_validator("database_url")

@@ -6,7 +6,10 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { ToastProvider } from './components/Toast'
 import i18n from './i18n'
+import { initInstallPromptCapture } from './lib/pwa'
 import './index.css'
+
+initInstallPromptCapture()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,10 +35,3 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .catch(() => void 0)
-  })
-}

@@ -224,17 +224,14 @@ def forgot_password(body: ForgotIn, db=Depends(get_db)):
     user.reset_token = token
     user.reset_token_expires = utcnow() + timedelta(minutes=30)
     db.commit()
-    dev_token = None
-    if not settings.telegram_enabled:
-        dev_token = token
-    else:
-        try:
-            send_text(
-                f"Bekat Uz parolni tiklash tokeni: {token}",
-                telegram_id=user.telegram_id,
-            )
-        except Exception:
-            dev_token = token
+    dev_token = token if settings.env == "dev" else None
+    try:
+        send_text(
+            f"Bekat Uz parolni tiklash tokeni: {token}",
+            telegram_id=user.telegram_id,
+        )
+    except Exception:
+        pass
     return ForgotOut(message="Parolni tiklash tokeni yuborildi", dev_token=dev_token)
 
 

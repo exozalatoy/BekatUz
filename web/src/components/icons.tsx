@@ -59,6 +59,16 @@ export function ProfileIcon(props: IconProps) {
   )
 }
 
+export function DownloadIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 21h14" />
+    </Base>
+  )
+}
+
 export function ShareIcon(props: IconProps) {
   return (
     <Base {...props}>
@@ -417,6 +427,25 @@ export function SendIcon(props: IconProps) {
     <Base {...props}>
       <path d="M21 3 10.5 13.5" />
       <path d="M21 3l-7 18-3.5-7.5L3 10l18-7Z" />
+    </Base>
+  )
+}
+
+export function CopyIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="8" y="8" width="12" height="12" rx="2.5" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </Base>
+  )
+}
+
+export function UploadIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M12 16V4" />
+      <path d="m7 9 5-5 5 5" />
+      <path d="M4 16v2.5a1.5 1.5 0 0 0 1.5 1.5h13a1.5 1.5 0 0 0 1.5-1.5V16" />
     </Base>
   )
 }

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AppNotices } from './components/AppNotices'
 import { Spinner } from './components/Spinner'
 import { AppShell } from './layouts/AppShell'
 import { AuthLayout } from './layouts/AuthLayout'
@@ -54,6 +55,7 @@ function App() {
   }, [darkMode])
 
   return (
+    <>
     <Suspense fallback={<PageFallback />}>
       <Routes>
       <Route path="/" element={<Splash />} />
@@ -106,6 +108,8 @@ function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
+    <AppNotices />
+    </>
   )
 }
 

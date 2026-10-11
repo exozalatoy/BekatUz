@@ -66,18 +66,20 @@ async def _send_telegram_message(text: str) -> None:
 def send_code(db, phone: str, telegram_id: str | None = None) -> str | None:
     code = generate_code()
     store_code(db, phone, code)
-    if not settings.telegram_enabled:
+    if settings.telegram_enabled:
+        target = settings.telegram_chat_id or telegram_id
+        if target:
+            try:
+                _run_async(_send_telegram_message(f"Bekat Uz tasdiqlash kodi: {code}"))
+                return None
+            except Exception:
+                logger.exception("Failed to send Telegram code to %s", target)
+    # Kod faqat Telegram bot orqali yetkaziladi. Demo kod faqat lokal dev da chiqadi.
+    if settings.env == "dev":
         logger.info("Telegram verification code for %s: %s", phone, code)
         return code
-    target = settings.telegram_chat_id or telegram_id
-    if target:
-        try:
-            _run_async(_send_telegram_message(f"Bekat Uz tasdiqlash kodi: {code}"))
-            return None
-        except Exception:
-            logger.exception("Failed to send Telegram code to %s", target)
-    logger.info("Telegram verification code for %s: %s", phone, code)
-    return code if settings.env == "dev" else None
+    logger.info("Verification code generated for %s (delivered via Telegram bot)", phone)
+    return None
 
 
 def send_text(text: str, telegram_id: str | None = None) -> bool:

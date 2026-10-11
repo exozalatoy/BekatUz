@@ -111,25 +111,6 @@ export function passwordStrength(password: string): { score: 0 | 1 | 2 | 3 | 4; 
   return { score: score as 0 | 1 | 2 | 3 | 4, label: levels[Math.min(score, 4)] ?? '' }
 }
 
-const DEV_HINT_KEY = 'bekat_dev_hint'
-
-export function setDevHint(value: string | null): void {
-  try {
-    if (value) window.sessionStorage.setItem(DEV_HINT_KEY, value)
-    else window.sessionStorage.removeItem(DEV_HINT_KEY)
-  } catch {
-    void 0
-  }
-}
-
-export function getDevHint(): string | null {
-  try {
-    return window.sessionStorage.getItem(DEV_HINT_KEY)
-  } catch {
-    return null
-  }
-}
-
 export function clampText(text: string, max: number): string {
   if (text.length <= max) return text
   return `${text.slice(0, max).trimEnd()}...`
