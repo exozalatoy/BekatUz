@@ -178,6 +178,8 @@ const uz = {
     benefit4: 'Texnik yordam',
     planDays: '{{count}} kun',
     subscribe: "Obuna bo'lish",
+    payme: 'Payme',
+    click: 'Click',
     payByCard: "Karta orqali to'lash",
     amount: 'To\'lov summasi',
     cardTitle: 'Kartaga o\'tkazing',

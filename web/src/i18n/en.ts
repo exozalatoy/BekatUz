@@ -83,6 +83,8 @@ const en: DeepPartial<UzDict> = {
     benefit4: 'Tech support',
     planDays: '{{count}} days',
     subscribe: 'Subscribe',
+    payme: 'Payme',
+    click: 'Click',
     payByCard: 'Pay by card',
     amount: 'Amount',
     cardTitle: 'Transfer to this card',

@@ -83,6 +83,8 @@ const ru: DeepPartial<UzDict> = {
     benefit4: 'Техподдержка',
     planDays: '{{count}} дн.',
     subscribe: 'Подписаться',
+    payme: 'Payme',
+    click: 'Click',
     payByCard: 'Оплатить картой',
     amount: 'Сумма',
     cardTitle: 'Переведите на эту карту',
