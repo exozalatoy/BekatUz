@@ -74,9 +74,17 @@ async def _send_telegram_message(text: str, chat_id: str | int) -> None:
 
 def send_code(db, phone: str, telegram_id: str | None = None) -> str | None:
     """Har bir raqam uchun alohida kod yaratadi va faqat o'sha raqamga
-    bog'langan Telegram chatga yuboradi."""
+    bog'langan Telegram chatga yuboradi.
+
+    Kod faqat quyidagi hollarda saqlanadi:
+      - kod Telegram chatga muvaffaqiyatli yuborilsa;
+      - lokal dev rejimida (demo kod sifatida).
+    Production'da kodni yetkazib bo'lmasa email/SMS yo'q, shuning uchun kod
+    saqlanmaydi — u faqat Telegram bot on-demand (raqam yuborilganda) yaratadi.
+    Aks holda eski (bot orqali yuborilgan) kod ustiga yozilib, saytga kiritilganda
+    "Invalid code" xatosi chiqardi.
+    """
     code = generate_code()
-    store_code(db, phone, code)
     if settings.telegram_enabled and is_chat_id(telegram_id):
         try:
             _run_async(
@@ -85,15 +93,17 @@ def send_code(db, phone: str, telegram_id: str | None = None) -> str | None:
                     telegram_id,  # type: ignore[arg-type]
                 )
             )
+            store_code(db, phone, code)
             return None
         except Exception:
             logger.exception("Failed to send Telegram code to %s", telegram_id)
     # Kod faqat Telegram bot orqali yetkaziladi. Demo kod faqat lokal dev da chiqadi.
     if settings.env == "dev":
+        store_code(db, phone, code)
         logger.info("Telegram verification code for %s: %s", phone, code)
         return code
     logger.info(
-        "Verification code generated for %s (deliver via Telegram bot deep link)", phone
+        "Verification code for %s delivered on-demand via Telegram bot", phone
     )
     return None
 

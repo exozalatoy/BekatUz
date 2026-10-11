@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from app.core.database import SessionLocal, utcnow
 from app.models import TelegramCode
+from app.services.telegram import generate_code, store_code
 from tests.conftest import TEST_PASSWORD
 
 
@@ -194,3 +195,20 @@ def test_rate_limit_on_login(client, seeded):
         statuses.append(response.status_code)
     assert statuses[-1] == 429
     assert 401 in statuses
+
+
+def test_bot_code_survives_resend_in_production(client, monkeypatch):
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "env", "production")
+    phone = "+998901000007"
+    _register(client, phone)
+    with SessionLocal() as db:
+        bot_code = generate_code()
+        store_code(db, phone, bot_code)
+    resend = client.post("/api/v1/auth/resend-code", json={"phone": phone})
+    assert resend.status_code == 200
+    verify = client.post(
+        "/api/v1/auth/verify-code", json={"phone": phone, "code": bot_code}
+    )
+    assert verify.status_code == 200
