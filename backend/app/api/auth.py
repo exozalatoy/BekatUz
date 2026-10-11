@@ -114,21 +114,30 @@ def verify_code(
     user = db.scalar(select(User).where(User.phone == body.phone))
     if user is None:
         raise DomainError("User not found", 404)
-    row = db.scalar(
-        select(TelegramCode)
-        .where(TelegramCode.phone == body.phone)
-        .order_by(TelegramCode.id.desc())
+    rows = list(
+        db.scalars(
+            select(TelegramCode)
+            .where(TelegramCode.phone == body.phone)
+            .order_by(TelegramCode.id.desc())
+        )
     )
-    if row is None:
+    if not rows:
         raise DomainError("Code not found or expired", 400)
-    if row.expires_at < utcnow():
-        raise DomainError("Code expired", 400)
-    if row.attempts >= MAX_ATTEMPTS:
+    latest = rows[0]
+    if latest.attempts >= MAX_ATTEMPTS:
         raise DomainError("Too many attempts, request a new code", 429)
-    if row.code != body.code:
-        row.attempts += 1
+    match = next((r for r in rows if r.code == body.code), None)
+    if match is None:
+        latest.attempts += 1
         db.commit()
         raise DomainError("Invalid code", 400)
+    if match.expires_at < utcnow():
+        # Eng oxirgi kod yangi bo'lsa ham, kiritilgan kod eskirgan bo'lishi mumkin.
+        if latest.expires_at >= utcnow():
+            latest.attempts += 1
+            db.commit()
+            raise DomainError("Invalid code", 400)
+        raise DomainError("Code expired", 400)
     user.is_verified = True
     db.query(TelegramCode).filter(TelegramCode.phone == body.phone).delete()
     db.commit()

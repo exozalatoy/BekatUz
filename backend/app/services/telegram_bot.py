@@ -52,7 +52,8 @@ async def _deliver_code(message: Message, phone: str | None) -> None:
         code = generate_code()
         store_code(db, phone, code)
     await message.answer(
-        f"Bekat Uz tasdiqlash kodi: <b>{code}</b>\n\nKod 5 daqiqa amal qiladi.",
+        f"Bekat Uz tasdiqlash kodi: <b>{code}</b>\n\n"
+        "Kod 10 daqiqa amal qiladi. Faqat eng oxirgi kod ishlaydi.",
         parse_mode="HTML",
     )
 

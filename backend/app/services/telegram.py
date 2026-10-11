@@ -10,7 +10,7 @@ from app.models import TelegramCode
 
 logger = logging.getLogger("bekatuz")
 
-CODE_TTL_MINUTES = 5
+CODE_TTL_MINUTES = 10
 MAX_ATTEMPTS = 5
 
 
@@ -89,7 +89,7 @@ def send_code(db, phone: str, telegram_id: str | None = None) -> str | None:
         try:
             _run_async(
                 _send_telegram_message(
-                    f"Bekat Uz tasdiqlash kodi: {code}\n\nKod 5 daqiqa amal qiladi.",
+                    f"Bekat Uz tasdiqlash kodi: {code}\n\nKod 10 daqiqa amal qiladi.",
                     telegram_id,  # type: ignore[arg-type]
                 )
             )

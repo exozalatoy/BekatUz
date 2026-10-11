@@ -98,6 +98,7 @@ export const uz = {
   drivers: {
     title: 'Haydovchilar',
     name: 'Ism',
+    namePlaceholder: 'To‘liq ism',
     phone: 'Telefon',
     category: 'Kategoriya',
     rating: 'Reyting',
@@ -112,6 +113,11 @@ export const uz = {
     detailTitle: 'Haydovchi ma’lumotlari',
     online: 'Onlayn',
     offline: 'Oflayn',
+    addDriver: "Haydovchi qo‘shish",
+    password: 'Parol',
+    passwordPlaceholder: 'Kamida 6 belgi',
+    invalidPhone: 'Telefon raqam noto‘g‘ri (+998901234567 format)',
+    passwordShort: 'Parol kamida 6 belgidan iborat bo‘lishi kerak',
   },
   vehicles: {
     title: 'Transportlar',

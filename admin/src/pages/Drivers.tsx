@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '../components/Badge'
@@ -8,17 +8,38 @@ import { Drawer } from '../components/Drawer'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
 import { Input } from '../components/Input'
+import { Modal } from '../components/Modal'
 import { Pagination } from '../components/Pagination'
 import { Select } from '../components/Select'
 import { Table, type Column } from '../components/Table'
-import { CheckIcon, CloseIcon, EyeIcon, SearchIcon } from '../components/icons'
+import { CheckIcon, CloseIcon, EyeIcon, PlusIcon, SearchIcon } from '../components/icons'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
-import { apiPatch, errorMessage, fetchPage } from '../lib/api'
+import { apiPatch, apiPost, errorMessage, fetchPage } from '../lib/api'
 import { formatDate } from '../lib/utils'
 import { toast } from '../store/toast'
 import type { AdminDriver } from '../types'
 
 const PAGE_SIZE = 20
+
+const CATEGORIES = ['Avtobus', 'Mikroavtobus', 'Gazel', 'Yengil avto']
+
+interface DriverForm {
+  full_name: string
+  phone: string
+  email: string
+  password: string
+  vehicle_category: string
+  is_approved: boolean
+}
+
+const emptyForm: DriverForm = {
+  full_name: '',
+  phone: '',
+  email: '',
+  password: '',
+  vehicle_category: CATEGORIES[CATEGORIES.length - 1],
+  is_approved: true,
+}
 
 function driverName(driver: AdminDriver): string {
   return driver.full_name ?? driver.user?.full_name ?? '—'
@@ -56,6 +77,8 @@ export function DriversPage() {
   const [searchInput, setSearchInput] = useState('')
   const [approval, setApproval] = useState('')
   const [selected, setSelected] = useState<AdminDriver | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [form, setForm] = useState<DriverForm>(emptyForm)
 
   const search = useDebouncedValue(searchInput, 400)
 
@@ -81,6 +104,42 @@ export function DriversPage() {
     },
     onError: (err) => toast.error(errorMessage(err)),
   })
+
+  const createDriver = useMutation({
+    mutationFn: (body: DriverForm) =>
+      apiPost<AdminDriver>('/admin/drivers', {
+        full_name: body.full_name.trim(),
+        phone: body.phone.replace(/[\s()-]/g, ''),
+        email: body.email.trim() || null,
+        password: body.password,
+        vehicle_category: body.vehicle_category,
+        is_approved: body.is_approved,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['admin-drivers'] })
+      toast.success(t('toast.created'))
+      setModalOpen(false)
+      setForm(emptyForm)
+    },
+    onError: (err) => toast.error(errorMessage(err)),
+  })
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    if (!form.full_name.trim() || !form.phone.trim() || !form.password) {
+      toast.error(t('common.required'))
+      return
+    }
+    if (!/^\+998\d{9}$/.test(form.phone.replace(/[\s()-]/g, ''))) {
+      toast.error(t('drivers.invalidPhone'))
+      return
+    }
+    if (form.password.length < 6) {
+      toast.error(t('drivers.passwordShort'))
+      return
+    }
+    createDriver.mutate(form)
+  }
 
   const rawItems = data?.items ?? []
   const items = rawItems.filter((driver) => {
@@ -196,6 +255,13 @@ export function DriversPage() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold text-navy">{t('drivers.title')}</h2>
+        <Button leftIcon={<PlusIcon width={18} height={18} />} onClick={() => setModalOpen(true)}>
+          {t('drivers.addDriver')}
+        </Button>
+      </div>
+
       <Card padded={false}>
         <div className="flex flex-wrap items-end gap-3 border-b border-line p-4">
           <div className="min-w-[220px] flex-1">
@@ -283,6 +349,70 @@ export function DriversPage() {
           </dl>
         )}
       </Drawer>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={t('drivers.addDriver')}
+        size="lg"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setModalOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" form="driver-form" loading={createDriver.isPending}>
+              {t('common.save')}
+            </Button>
+          </>
+        }
+      >
+        <form
+          id="driver-form"
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+        >
+          <Input
+            label={t('drivers.name')}
+            value={form.full_name}
+            onChange={(event) => setForm({ ...form, full_name: event.target.value })}
+            placeholder={t('drivers.namePlaceholder')}
+          />
+          <Input
+            label={t('drivers.phone')}
+            value={form.phone}
+            onChange={(event) => setForm({ ...form, phone: event.target.value })}
+            placeholder="+998 (90) 123-45-67"
+          />
+          <Input
+            label={t('users.email')}
+            value={form.email}
+            onChange={(event) => setForm({ ...form, email: event.target.value })}
+            placeholder="mail@example.com"
+          />
+          <Input
+            label={t('drivers.password')}
+            type="password"
+            value={form.password}
+            onChange={(event) => setForm({ ...form, password: event.target.value })}
+            placeholder={t('drivers.passwordPlaceholder')}
+          />
+          <Select
+            label={t('drivers.category')}
+            value={form.vehicle_category}
+            onChange={(event) => setForm({ ...form, vehicle_category: event.target.value })}
+            options={CATEGORIES.map((category) => ({ value: category, label: category }))}
+          />
+          <Select
+            label={t('drivers.approved')}
+            value={form.is_approved ? 'yes' : 'no'}
+            onChange={(event) => setForm({ ...form, is_approved: event.target.value === 'yes' })}
+            options={[
+              { value: 'yes', label: t('common.yes') },
+              { value: 'no', label: t('common.no') },
+            ]}
+          />
+        </form>
+      </Modal>
     </div>
   )
 }
