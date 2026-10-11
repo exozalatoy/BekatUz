@@ -319,6 +319,55 @@ class Notification(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
+class ChatConversation(Base):
+    __tablename__ = "chat_conversations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    passenger_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    driver_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    trip_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    passenger: Mapped[User] = relationship(foreign_keys=[passenger_id])
+    driver: Mapped[User] = relationship(foreign_keys=[driver_id])
+    messages: Mapped[list["ChatMessage"]] = relationship(
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+        order_by="ChatMessage.id",
+        passive_deletes=True,
+    )
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(
+        ForeignKey("chat_conversations.id", ondelete="CASCADE"), index=True
+    )
+    sender_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    type: Mapped[str] = mapped_column(String(10), default="text", index=True)
+    payload: Mapped[str] = mapped_column(Text, default="")
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, index=True
+    )
+
+    conversation: Mapped[ChatConversation] = relationship(
+        back_populates="messages"
+    )
+    sender: Mapped[User] = relationship()
+
+
 class PushSubscription(Base):
     __tablename__ = "push_subscriptions"
 
@@ -372,6 +421,8 @@ __all__ = [
     "Subscription",
     "Payment",
     "Notification",
+    "ChatConversation",
+    "ChatMessage",
     "PushSubscription",
     "TelegramCode",
     "RefreshToken",

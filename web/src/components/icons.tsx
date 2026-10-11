@@ -333,6 +333,52 @@ export function PhoneIcon(props: IconProps) {
   )
 }
 
+export function PhoneOffIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M6.5 3.5 9 4l1 4-2 1.5a12 12 0 0 0 6 6L15.5 13l4 1 .5 2.5A2 2 0 0 1 18 19 15 15 0 0 1 5 6a2 2 0 0 1 1.5-2.5Z" />
+      <path d="M3 3l18 18" />
+    </Base>
+  )
+}
+
+export function ChatIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" />
+    </Base>
+  )
+}
+
+export function MicIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="9" y="3" width="6" height="12" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" />
+    </Base>
+  )
+}
+
+export function MicOffIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="9" y="3" width="6" height="12" rx="3" />
+      <path d="M5 11a7 7 0 0 0 11.7 5.4M17.4 9.9A7 7 0 0 0 19 12M12 18v3M9 21h6" />
+      <path d="M3 3l18 18" />
+    </Base>
+  )
+}
+
+export function ImageIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="3" />
+      <circle cx="9" cy="9.5" r="1.6" />
+      <path d="M3.5 16.5l4.5-4 4 3.5 3-2.5 5.5 5" />
+    </Base>
+  )
+}
+
 export function CalendarIcon(props: IconProps) {
   return (
     <Base {...props}>

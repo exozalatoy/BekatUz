@@ -24,7 +24,15 @@ import { bearingBetween } from '../../lib/geo'
 import { WSClient, type WSStatus } from '../../lib/ws'
 import { TASHKENT, cn, formatSom } from '../../lib/utils'
 import { useAuthStore } from '../../store/auth'
-import type { DriverMe, DriverRequest, DriverRequestEvent, DriverRequestList, RouteDetail } from '../../lib/types'
+import { useCallStore } from '../../store/call'
+import type {
+  ChatConversation,
+  DriverMe,
+  DriverRequest,
+  DriverRequestEvent,
+  DriverRequestList,
+  RouteDetail,
+} from '../../lib/types'
 
 const STATUS_KEYS: Record<string, string> = {
   pending: 'driver.statusPending',
@@ -52,6 +60,7 @@ export function DriverMap() {
   const toast = useToast()
   const queryClient = useQueryClient()
   const accessToken = useAuthStore((state) => state.accessToken)
+  const startCall = useCallStore((state) => state.startCall)
 
   const [mapReady, setMapReady] = useState(false)
   const [wsStatus, setWsStatus] = useState<WSStatus>('connecting')
@@ -282,7 +291,18 @@ export function DriverMap() {
           size="sm"
           variant="secondary"
           leftIcon={<PhoneIcon size={16} />}
-          onClick={() => toast.show(t('driver.callUnavailable'), 'info')}
+          onClick={() => {
+            if (!request.passenger_id) {
+              toast.show(t('driver.callUnavailable'), 'info')
+              return
+            }
+            void startCall({
+              id: request.passenger_id,
+              full_name: request.passenger_name ?? t('common.no'),
+              avatar_url: null,
+              online: true,
+            })
+          }}
         >
           {t('driver.call')}
         </Button>
@@ -290,7 +310,16 @@ export function DriverMap() {
           size="sm"
           variant="secondary"
           leftIcon={<SendIcon size={16} />}
-          onClick={() => navigate(`/app/driver/chat/${request.id}`)}
+          onClick={() => {
+            if (request.passenger_id == null) {
+              toast.show(t('driver.callUnavailable'), 'info')
+              return
+            }
+            void api
+              .get<ChatConversation>(`/chats/conversation?peer_id=${request.passenger_id}`)
+              .then((conversation) => navigate(`/app/chat/${conversation.id}`))
+              .catch(() => toast.show(t('chat.error'), 'error'))
+          }}
         >
           {t('driver.chat')}
         </Button>

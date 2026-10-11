@@ -11,8 +11,10 @@ import { useToast } from '../../components/toast-context'
 import {
   BusIcon,
   CarIcon,
+  ChatIcon,
   CreditCardIcon,
   CrownIcon,
+  LogoutIcon,
   MapIcon,
   RefreshIcon,
   StarIcon,
@@ -54,6 +56,12 @@ export function DriverDashboard() {
 
   const toggleMutation = useMutation({
     mutationFn: (online: boolean) => api.patch('/drivers/me', { online }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['driver-me'] }),
+    onError: (error) => toast.show(getErrorMessage(error, t), 'error'),
+  })
+
+  const finishWorkMutation = useMutation({
+    mutationFn: () => api.post('/drivers/me/finish-work'),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['driver-me'] }),
     onError: (error) => toast.show(getErrorMessage(error, t), 'error'),
   })
@@ -169,9 +177,22 @@ export function DriverDashboard() {
                 onClick={() => navigate('/app/driver/map')}
               />
               <ListItem
+                icon={<ChatIcon size={20} />}
+                title={t('chat.title')}
+                onClick={() => navigate('/app/chats')}
+              />
+              <ListItem
                 icon={<StarIcon size={20} />}
                 title={t('driver.ratingsTitle')}
                 onClick={() => navigate('/app/driver/ratings')}
+              />
+              <ListItem
+                icon={<LogoutIcon size={20} />}
+                title={t('driver.finishWork')}
+                danger
+                onClick={() => {
+                  if (driver.online) finishWorkMutation.mutate()
+                }}
               />
             </Card>
           </div>

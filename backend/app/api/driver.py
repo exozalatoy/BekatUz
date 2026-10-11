@@ -150,6 +150,7 @@ def list_requests(user: User = Depends(get_current_user), db=Depends(get_db)):
     items = [
         DriverRequestOut(
             id=trip.id,
+            passenger_id=trip.passenger_id,
             passenger_name=trip.passenger.full_name if trip.passenger else None,
             from_name=trip.from_name,
             to_name=trip.to_name,
@@ -173,6 +174,20 @@ def _update_request_status(
     trip.status = status
     db.commit()
     return DetailOut(detail=f"Request {status}")
+
+
+@router.post("/drivers/me/finish-work", response_model=DriverMeOut)
+def finish_work(
+    user: User = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    _require_driver(user)
+    profile = user.driver_profile
+    if profile is None:
+        raise DomainError("Driver profile not found", 404)
+    profile.online = False
+    db.commit()
+    return driver_me(user=user, db=db)
 
 
 @router.post("/drivers/requests/{request_id}/accept", response_model=DetailOut)

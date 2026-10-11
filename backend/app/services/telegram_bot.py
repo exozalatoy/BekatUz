@@ -1,9 +1,9 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command, CommandStart
-from aiogram.types import Message
+from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup
 from sqlalchemy import select
 
 from app.core.config import settings
@@ -12,6 +12,18 @@ from app.models import User
 from app.services.telegram import generate_code, store_code
 
 logger = logging.getLogger("bekatuz")
+
+PHONE_KEYBOARD = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Telefon raqamni yuborish", request_contact=True)]
+    ],
+    resize_keyboard=True,
+)
+
+PHONE_PROMPT = (
+    "Telefon raqamingizni yuboring (masalan: +998 90 123 45 67 yoki 901234567). "
+    "Shunda tasdiqlash kodi shu chatga keladi."
+)
 
 
 def _normalize_phone(payload: str) -> str | None:
@@ -23,53 +35,58 @@ def _normalize_phone(payload: str) -> str | None:
     return None
 
 
+async def _deliver_code(message: Message, phone: str | None) -> None:
+    if phone is None:
+        await message.answer(PHONE_PROMPT, reply_markup=PHONE_KEYBOARD)
+        return
+    with SessionLocal() as db:
+        user = db.scalar(select(User).where(User.phone == phone))
+        if user is None:
+            await message.answer(
+                "Bu raqam tizimda topilmadi. Avval ilovada ro'yxatdan o'ting.",
+                reply_markup=PHONE_KEYBOARD,
+            )
+            return
+        user.telegram_id = str(message.chat.id)
+        db.commit()
+        code = generate_code()
+        store_code(db, phone, code)
+    await message.answer(
+        f"Bekat Uz tasdiqlash kodi: <b>{code}</b>\n\nKod 5 daqiqa amal qiladi.",
+        parse_mode="HTML",
+    )
+
+
 def create_dispatcher() -> Dispatcher:
     dispatcher = Dispatcher()
 
     @dispatcher.message(CommandStart(deep_link=True))
     async def handle_start_deep(message: Message, command) -> None:
-        phone = _normalize_phone(command.args or "")
-        if phone is None:
-            await message.answer(
-                "Bekat Uz botiga xush kelibsiz! Iltimos, ilovadagi "
-                "\"Telegramda kod olish\" tugmasi orqali qayta kiring."
-            )
-            return
-        with SessionLocal() as db:
-            user = db.scalar(select(User).where(User.phone == phone))
-            if user is None:
-                await message.answer(
-                    "Bu raqam tizimda topilmadi. Avval ilovada ro'yxatdan o'ting."
-                )
-                return
-            user.telegram_id = str(message.chat.id)
-            db.commit()
-            code = generate_code()
-            store_code(db, phone, code)
-        await message.answer(
-            f"Bekat Uz tasdiqlash kodi: <b>{code}</b>\n\nKod 5 daqiqa amal qiladi.",
-            parse_mode="HTML",
-        )
+        await _deliver_code(message, _normalize_phone(command.args or ""))
 
     @dispatcher.message(CommandStart())
     async def handle_start(message: Message) -> None:
         await message.answer(
-            "Bekat Uz botiga xush kelibsiz! Tasdiqlash kodlaringiz shu yerga yuboriladi. "
-            "Kodni olish uchun ilovada ro'yxatdan o'ting."
+            "Bekat Uz botiga xush kelibsiz! Kod olish uchun telefon raqamingizni "
+            "shu chatga yuboring.\n\n" + PHONE_PROMPT,
+            reply_markup=PHONE_KEYBOARD,
         )
 
     @dispatcher.message(Command("help"))
     async def handle_help(message: Message) -> None:
-        await message.answer(
-            "Ro'yxatdan o'tganda ilovadagi \"Telegramda kod olish\" tugmasini bosing — "
-            "6 xonali kod shu chatga keladi."
-        )
+        await message.answer(PHONE_PROMPT, reply_markup=PHONE_KEYBOARD)
 
     @dispatcher.message(Command("code"))
     async def handle_code(message: Message) -> None:
-        await message.answer(
-            "Kod olish uchun ilovadagi \"Telegramda kod olish\" tugmasini bosing."
-        )
+        await message.answer(PHONE_PROMPT, reply_markup=PHONE_KEYBOARD)
+
+    @dispatcher.message(F.contact)
+    async def handle_contact(message: Message) -> None:
+        await _deliver_code(message, _normalize_phone(message.contact.phone_number))
+
+    @dispatcher.message(F.text & ~F.text.startswith("/"))
+    async def handle_phone_text(message: Message) -> None:
+        await _deliver_code(message, _normalize_phone(message.text or ""))
 
     return dispatcher
 

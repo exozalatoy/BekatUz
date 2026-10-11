@@ -3,18 +3,21 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { LngLatBounds, Marker, Popup, type Map as MapLibreMap } from 'maplibre-gl'
+import { Avatar } from '../../components/Avatar'
 import { Badge } from '../../components/Badge'
 import { Button } from '../../components/Button'
 import { MapCanvas } from '../../components/MapCanvas'
 import { ReviewSheet, type ReviewDriver } from '../../components/ReviewSheet'
 import { Segmented } from '../../components/Segmented'
 import { Sheet } from '../../components/Sheet'
-import { BusIcon, LocationIcon } from '../../components/icons'
+import { BusIcon, ChatIcon, LocationIcon, PhoneIcon } from '../../components/icons'
 import { api } from '../../lib/api'
 import { etaMinutes, haversineKm } from '../../lib/geo'
 import { WSClient, type WSStatus } from '../../lib/ws'
 import { TASHKENT, cn } from '../../lib/utils'
+import { useCallStore } from '../../store/call'
 import type {
+  ChatConversation,
   RouteOut,
   RouteType,
   VehicleLite,
@@ -67,6 +70,23 @@ export function MapView() {
     queryFn: () => api.get<VehicleOut>(`/vehicles/${sheetVehicle?.id}`),
     enabled: Boolean(sheetVehicle?.id),
   })
+
+  const startCall = useCallStore((state) => state.startCall)
+
+  const openChat = useCallback(
+    async (peerId?: number | null) => {
+      if (peerId == null) return
+      try {
+        const conversation = await api.get<ChatConversation>(
+          `/chats/conversation?peer_id=${peerId}`,
+        )
+        navigate(`/app/chat/${conversation.id}`)
+      } catch {
+        void 0
+      }
+    },
+    [navigate],
+  )
 
   const reviewDrivers: ReviewDriver[] =
     sheetVehicle?.driver_id != null
@@ -504,6 +524,40 @@ export function MapView() {
                 {vehicle.seats_free}/{vehicle.seats_total}
               </span>
             </div>
+
+            {vehicle.driver ? (
+              <div className="flex items-center gap-3 rounded-btn border border-border px-3 py-2.5">
+                <Avatar name={vehicle.driver.full_name} src={vehicle.driver.avatar_url} size="md" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-text">{vehicle.driver.full_name}</p>
+                  <p className="flex items-center gap-1.5 text-xs text-muted">
+                    <span
+                      className={cn(
+                        'h-2 w-2 rounded-full',
+                        vehicle.driver.online ? 'bg-success' : 'bg-muted',
+                      )}
+                    />
+                    {vehicle.driver.online ? t('chat.online') : t('chat.offline')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={t('chat.title')}
+                  onClick={() => void openChat(vehicle.driver?.id)}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-accent-soft text-accent transition active:scale-95"
+                >
+                  <ChatIcon size={20} />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t('call.title')}
+                  onClick={() => void startCall(vehicle.driver!)}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-btn bg-success/15 text-success transition active:scale-95"
+                >
+                  <PhoneIcon size={20} />
+                </button>
+              </div>
+            ) : null}
 
             <Button
               fullWidth

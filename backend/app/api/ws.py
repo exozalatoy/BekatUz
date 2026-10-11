@@ -149,3 +149,48 @@ async def ws_chat(websocket: WebSocket, token: str | None = None, room: str = "l
         pass
     finally:
         await manager.leave_room(room, websocket)
+
+
+def _public_user(payload_in: dict, user, fallback_id: int) -> dict:
+    data = dict(payload_in.get("data") or {})
+    data["from_user_id"] = user.id
+    data.setdefault(
+        "from",
+        {"id": user.id, "full_name": user.full_name, "avatar_url": user.avatar_url},
+    )
+    data.setdefault("call_id", data.get("call_id") or fallback_id)
+    return data
+
+
+@router.websocket("/ws/user")
+async def ws_user(websocket: WebSocket, token: str | None = None):
+    """Per-user socket: chat realtime + WebRTC call signalling relay."""
+    user = _authenticate(token)
+    if user is None:
+        await websocket.close(code=4401)
+        return
+    user_id = user.id
+    await websocket.accept()
+    await manager.connect_user(user_id, websocket)
+    try:
+        while True:
+            message = await websocket.receive_json()
+            mtype = message.get("type")
+            data = message.get("data") or {}
+            target_id = data.get("target_user_id")
+            if target_id is None or target_id == user_id:
+                continue
+            if mtype in ("call:invite", "call:signal", "call:end"):
+                await manager.send_to_user(
+                    target_id,
+                    {
+                        "type": mtype,
+                        "data": _public_user(message, user, target_id),
+                    },
+                )
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        await manager.disconnect_user(user_id, websocket)

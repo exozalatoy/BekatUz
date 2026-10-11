@@ -11,6 +11,7 @@ class ConnectionManager:
     def __init__(self) -> None:
         self.vehicles: dict[WebSocket, int | None] = {}
         self.drivers: dict[int, WebSocket] = {}
+        self.users: dict[int, set[WebSocket]] = {}
         self.chat_rooms: dict[str, set[WebSocket]] = {}
         self._lock = asyncio.Lock()
 
@@ -31,6 +32,53 @@ class ConnectionManager:
                     await old.close()
                 except Exception:
                     pass
+
+    async def connect_user(self, user_id: int, websocket: WebSocket) -> None:
+        async with self._lock:
+            self.users.setdefault(user_id, set()).add(websocket)
+
+    async def disconnect_user(self, user_id: int, websocket: WebSocket) -> None:
+        async with self._lock:
+            sockets = self.users.get(user_id)
+            if sockets is not None:
+                sockets.discard(websocket)
+                if not sockets:
+                    self.users.pop(user_id, None)
+
+    async def send_to_user(self, user_id: int, payload: dict) -> bool:
+        sockets = list(self.users.get(user_id, set()))
+        if not sockets:
+            return False
+        sent = False
+        for websocket in sockets:
+            try:
+                await websocket.send_json(payload)
+                sent = True
+            except Exception:
+                await self.disconnect_user(user_id, websocket)
+        return sent
+
+    def send_to_user_sync(self, user_id: int, payload: dict) -> bool:
+        import threading
+
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(self.send_to_user(user_id, payload))
+        result: dict = {}
+
+        def runner() -> None:
+            try:
+                result["value"] = asyncio.run(self.send_to_user(user_id, payload))
+            except Exception as exc:  # pragma: no cover
+                result["error"] = exc
+
+        thread = threading.Thread(target=runner)
+        thread.start()
+        thread.join()
+        if "error" in result:
+            raise result["error"]
+        return result.get("value", False)
 
     async def disconnect_driver(self, driver_id: int, websocket: WebSocket) -> None:
         async with self._lock:
@@ -104,6 +152,7 @@ class ConnectionManager:
                 result.append(
                     {
                         "id": trip.id,
+                        "passenger_id": trip.passenger_id,
                         "passenger_name": passenger_name,
                         "from_name": trip.from_name,
                         "to_name": trip.to_name,

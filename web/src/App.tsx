@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppNotices } from './components/AppNotices'
+import { CallOverlay } from './components/CallOverlay'
 import { Spinner } from './components/Spinner'
 import { AppShell } from './layouts/AppShell'
 import { AuthLayout } from './layouts/AuthLayout'
@@ -14,7 +15,8 @@ import { Register } from './pages/auth/Register'
 import { Reset } from './pages/auth/Reset'
 import { RoleSelect } from './pages/auth/RoleSelect'
 import { Verify } from './pages/auth/Verify'
-import { DriverChat } from './pages/app/DriverChat'
+import { ChatsList } from './pages/app/ChatsList'
+import { ConversationChat } from './pages/app/ConversationChat'
 import { DriverDashboard } from './pages/app/DriverDashboard'
 import { Help } from './pages/app/Help'
 import { History } from './pages/app/History'
@@ -99,9 +101,10 @@ function App() {
         <Route path="settings" element={<Settings />} />
         <Route path="help" element={<Help />} />
         <Route path="premium" element={<Premium />} />
+        <Route path="chats" element={<ChatsList />} />
+        <Route path="chat/:id" element={<ConversationChat />} />
         <Route path="driver" element={<DriverDashboard />} />
         <Route path="driver/map" element={<DriverMap />} />
-        <Route path="driver/chat/:id" element={<DriverChat />} />
         <Route path="driver/ratings" element={<DriverRatings />} />
       </Route>
 
@@ -109,6 +112,7 @@ function App() {
       </Routes>
     </Suspense>
     <AppNotices />
+    <CallOverlay />
     </>
   )
 }

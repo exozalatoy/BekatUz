@@ -97,6 +97,10 @@ export function Verify() {
         </button>
       ) : null}
 
+      {telegramLink ? (
+        <p className="mt-2 text-center text-xs text-muted">{t('auth.telegramHint')}</p>
+      ) : null}
+
       <div className="mt-6">
         <OtpInput value={code} onChange={setCode} onComplete={submit} error={Boolean(error)} disabled={loading} />
       </div>

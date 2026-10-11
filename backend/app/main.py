@@ -8,6 +8,7 @@ from sqlalchemy import text
 from app.api import (
     admin,
     auth,
+    chats,
     driver,
     news,
     notifications,
@@ -77,6 +78,7 @@ def create_app() -> FastAPI:
         premium,
         notifications,
         push,
+        chats,
         driver,
         admin,
     ):

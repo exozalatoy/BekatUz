@@ -101,6 +101,13 @@ export interface VehicleRouteLite {
   to_name: string
 }
 
+export interface VehicleDriver {
+  id: number
+  full_name: string
+  avatar_url: string | null
+  online: boolean
+}
+
 export interface VehicleOut {
   id: number
   route_id: number | null
@@ -116,6 +123,7 @@ export interface VehicleOut {
   seats_free: number
   updated_at: string
   route: VehicleRouteLite | null
+  driver: VehicleDriver | null
 }
 
 export interface VehicleLite {
@@ -250,6 +258,7 @@ export interface DriverMe {
 
 export interface DriverRequest {
   id: number
+  passenger_id: number | null
   passenger_name: string | null
   from_name: string
   to_name: string
@@ -276,4 +285,37 @@ export interface ChatMessageEvent {
 export interface DriverRequestEvent {
   type: 'request'
   data: DriverRequest & { created_at: string }
+}
+
+export type ChatMessageType = 'text' | 'image' | 'voice'
+
+export interface ChatUserBrief {
+  id: number
+  full_name: string
+  avatar_url: string | null
+  online: boolean
+}
+
+export interface ChatMessageOut {
+  id: number
+  conversation_id: number
+  sender_id: number
+  type: ChatMessageType
+  payload: string
+  created_at: string
+}
+
+export interface ChatConversation {
+  id: number
+  peer: ChatUserBrief
+  trip_id: number | null
+  last_message: ChatMessageOut | null
+  unread: number
+  created_at: string
+}
+
+export interface ChatMessageUserEvent {
+  type: 'chat:message'
+  conversation_id: number
+  data: ChatMessageOut
 }

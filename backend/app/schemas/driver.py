@@ -42,6 +42,7 @@ class DriverLocationIn(BaseModel):
 
 class DriverRequestOut(BaseModel):
     id: int
+    passenger_id: int | None
     passenger_name: str | None
     from_name: str
     to_name: str

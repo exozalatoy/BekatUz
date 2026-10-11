@@ -38,6 +38,13 @@ class VehicleRouteBrief(BaseModel):
     to_name: str
 
 
+class VehicleDriverOut(BaseModel):
+    id: int
+    full_name: str
+    avatar_url: str | None = None
+    online: bool = False
+
+
 class VehicleOut(BaseModel):
     id: int
     route_id: int | None
@@ -53,6 +60,7 @@ class VehicleOut(BaseModel):
     seats_free: int
     updated_at: datetime
     route: VehicleRouteBrief | None = None
+    driver: VehicleDriverOut | None = None
 
 
 class RouteDetailOut(RouteOut):
@@ -101,6 +109,17 @@ def vehicle_out(vehicle: Vehicle) -> VehicleOut:
             from_name=route.from_name,
             to_name=route.to_name,
         )
+    driver_brief = None
+    if vehicle.driver_id is not None and vehicle.driver is not None:
+        online = False
+        if vehicle.driver.driver_profile is not None:
+            online = vehicle.driver.driver_profile.online
+        driver_brief = VehicleDriverOut(
+            id=vehicle.driver.id,
+            full_name=vehicle.driver.full_name,
+            avatar_url=vehicle.driver.avatar_url,
+            online=online,
+        )
     return VehicleOut(
         id=vehicle.id,
         route_id=vehicle.route_id,
@@ -116,6 +135,7 @@ def vehicle_out(vehicle: Vehicle) -> VehicleOut:
         seats_free=vehicle.seats_free,
         updated_at=vehicle.updated_at,
         route=route_brief,
+        driver=driver_brief,
     )
 
 
