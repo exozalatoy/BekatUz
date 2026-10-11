@@ -49,6 +49,24 @@ docker compose up --build
 - admin → http://localhost:5174
 - db → PostGIS 16, redis → 7
 
+## Render'ga deploy (bir marta bosishda)
+
+Repo ildizidagi [`render.yaml`](render.yaml) Blueprint orqali barcha servislar avtomatik yaratiladi:
+
+1. Kodni GitHub'ga push qiling.
+2. Render Dashboard → **New +** → **Blueprint** → reponi tanlang.
+3. Render `render.yaml` ni o'qib quyidagilarni yaratadi:
+   - `bekat-uz-api` — FastAPI web service (build'da `requirements.txt`, ishga tushishda `migrate` + `seed`)
+   - `bekat-uz-web` — yo'lovchi/haydovchi ilovasi (static site)
+   - `bekat-uz-admin` — admin panel (static site)
+   - `bekat-uz-db` — boshqariladigan PostgreSQL
+
+`SECRET_KEY` avtomatik generatsiya qilinadi. `TELEGRAM_BOT_TOKEN` so'raladi (bo'sh qoldirish mumkin).
+Agar `onrender.com` subdomenlari band bo'lsa, Render nomga qo'shimcha qo'shadi — shunda
+`render.yaml` dagi `VITE_API_BASE_URL`, `VITE_WS_BASE_URL` va `CORS_ORIGINS` ni haqiqiy URL'larga yangilang.
+
+> Eslatma: Render'ning bepul PostgreSQL 30 kunlik sinov muddatidan keyin amal qiladi; production uchun pullik plan tavsiya etiladi. Redis ixtiyoriy — bo'lmasa ilova in-memory rejimga o'tadi.
+
 ## Demo hisoblar
 
 | Rol | Login | Parol |

@@ -1,0 +1,96 @@
+# Render Blueprint — Bekat Uz (FastAPI + React web + React admin)
+#
+# Deploy: push this repo to GitHub, then in Render:
+#   New + > Blueprint > pick the repo. Render reads this file.
+#
+# Services created:
+#   - bekat-uz-api    (FastAPI, Python web service)
+#   - bekat-uz-web    (passenger/driver app, static site)
+#   - bekat-uz-admin  (admin panel, static site)
+#   - bekat-uz-db     (managed PostgreSQL)
+#
+# NOTE: If Render assigns different onrender.com subdomains (name collisions),
+# update VITE_API_BASE_URL / VITE_WS_BASE_URL below and CORS_ORIGINS on the API.
+
+services:
+  - type: web
+    name: bekat-uz-api
+    runtime: python
+    region: frankfurt
+    plan: free
+    rootDir: backend
+    healthCheckPath: /health
+    buildCommand: pip install -r requirements.txt
+    # Create/upgrade tables, seed demo data (idempotent), then serve.
+    startCommand: python -m app.scripts.migrate && python -m app.scripts.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "14"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bekat-uz-db
+          property: connectionString
+      # No Redis on free plan -> app falls back to in-memory store.
+      - key: REDIS_URL
+        value: ""
+      # Allow the two static frontends to call the API.
+      - key: CORS_ORIGINS
+        value: https://bekat-uz-web.onrender.com,https://bekat-uz-admin.onrender.com
+      - key: SIMULATE_VEHICLES
+        value: "true"
+      # Optional: leave blank, or paste a bot token in the dashboard.
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        value: bekatuzz_bot
+
+  - type: web
+    name: bekat-uz-web
+    runtime: static
+    buildCommand: npm ci --prefix web && npm run build --prefix web
+    staticPublishPath: web/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      - key: VITE_API_BASE_URL
+        value: https://bekat-uz-api.onrender.com/api/v1
+      - key: VITE_WS_BASE_URL
+        value: wss://bekat-uz-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
+    name: bekat-uz-admin
+    runtime: static
+    buildCommand: npm ci --prefix admin && npm run build --prefix admin
+    staticPublishPath: admin/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      - key: VITE_API_BASE_URL
+        value: https://bekat-uz-api.onrender.com/api/v1
+      - key: VITE_WS_BASE_URL
+        value: wss://bekat-uz-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: bekat-uz-db
+    plan: free
+    region: frankfurt
+    databaseName: bekatuz
+    user: bekatuz
