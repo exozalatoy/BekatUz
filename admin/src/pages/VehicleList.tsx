@@ -75,7 +75,7 @@ export function VehicleList() {
     queryFn: async () => {
       const response = await apiGet<{ items?: RouteOut[] } | RouteOut[]>(
         '/admin/routes',
-        { page_size: 200 },
+        { page_size: 100 },
       )
       return Array.isArray(response) ? response : response.items ?? []
     },
@@ -83,7 +83,7 @@ export function VehicleList() {
 
   const driversQuery = useQuery({
     queryKey: ['drivers-options'],
-    queryFn: () => fetchPage<AdminDriver>('/admin/drivers', { page_size: 200 }),
+    queryFn: () => fetchPage<AdminDriver>('/admin/drivers', { page_size: 100 }),
   })
 
   const routeOptions = useMemo(
